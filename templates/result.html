@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card">
+  <h2>結果：{{ label }}</h2>
+
+  <div class="kpi">
+    <div class="box">
+      <div class="k">総合</div>
+      <div class="v">{{ result.scores.total }}</div>
+      <div class="small">{{ result.scores.rank }}</div>
+    </div>
+    <div class="box">
+      <div class="k">確信度</div>
+      <div class="v">{{ result.scores.confidence_pct }}%</div>
+      <div class="progress" aria-hidden="true"><div style="width:{{ result.scores.confidence_pct }}%"></div></div>
+      <div class="small">動画/写真/測尺が揃うほど上がります</div>
+    </div>
+    <div class="box">
+      <div class="k">芝寄り度 (断定しない)</div>
+      <div class="v">{{ (result.scores.turfiness*100)|round(0) }}%</div>
+      <div class="small">Speed寄り度の簡易指標（v2.0で精緻化）</div>
+    </div>
+  </div>
+
+  <div class="hr"></div>
+  <h2>項目別（厳しめ）</h2>
+  <table class="table">
+    <tr><th>項目</th><th>値</th><th>言葉</th></tr>
+    <tr><td>スピード</td><td>{{ result.scores.speed }}</td><td>{{ result.scores.rank }}</td></tr>
+    <tr><td>スタミナ</td><td>{{ result.scores.stamina }}</td><td>距離 {{ payload.distance_m or "?" }}m の想定を含む</td></tr>
+    <tr><td>パワー</td><td>{{ result.scores.power }}</td><td>馬体重/推進力の簡易</td></tr>
+    <tr><td>耐久</td><td>{{ result.scores.durability }}</td><td>管囲/胸囲の簡易</td></tr>
+    <tr><td>リスク</td><td>{{ result.scores.risk }}</td><td>高いほどリスク（脚元・ムラ）</td></tr>
+  </table>
+
+  <div class="hr"></div>
+  <h2>参考：市場推定</h2>
+  {% if result.market.market_avg and result.market.market_avg.man %}
+  <div class="small">市場価格平均値（入力）: {{ result.market.market_avg.man|round(0) }}万円</div>
+  {% endif %}
+  <div class="small">推定レンジ: 約 {{ (result.market.yen_low/10000)|round(0) }} 〜 {{ (result.market.yen_high/10000)|round(0) }}万円</div>
+  <div class="small">ブラックタイプ / 近親GSW は「数値 or URL」入力（v2.0でURL自動抽出に対応予定）</div>
+
+  <div class="hr"></div>
+  <div class="grid">
+    <div>
+      <h2>入力写真</h2>
+      {% if result.inputs_used.has_side_photo %}
+        <img class="preview" src="{{ url_for('static', filename=payload._side_rel.replace('static/','')) }}" alt="side">
+      {% else %}
+        <div class="small">未添付</div>
+      {% endif %}
+    </div>
+    <div>
+      <h2>歩様予測（擬似）</h2>
+      {% if result.predicted_3yo_rel %}
+        <img class="preview" src="{{ url_for('static', filename=result.predicted_3yo_rel.replace('static/','')) }}" alt="pred">
+      {% else %}
+        <div class="small">生成できませんでした（写真未添付/読み込み失敗など）</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="hr"></div>
+  <a class="btn" href="{{ url_for('index') }}">← もう一度</a>
+</div>
+<div class="card" style="margin-top:16px;">
+  <h3>歩様 v2（A–Dロック）</h3>
+  {% if result.scores.v2_scores and result.scores.v2_scores.total %}
+    <div><b>総合点</b>: {{ result.scores.v2_scores.total.Total|round(1) }} / 100</div>
+    <div><b>信頼区間</b>: {{ result.scores.v2_scores.total.CI[0]|round(1) }} – {{ result.scores.v2_scores.total.CI[1]|round(1) }}</div>
+    <div><b>馬券内%</b>: {{ result.scores.v2_scores.prob.PlacePct|round(1) }}%　<b>勝ち負け%</b>: {{ result.scores.v2_scores.prob.ContendPct|round(1) }}%</div>
+    <div style="margin-top:8px;">
+      <b>項目</b>
+      P(ピッチ): {{ result.scores.v2_scores.item_scores.P|round(1) }},
+      S(ストライド): {{ result.scores.v2_scores.item_scores.S|round(1) }},
+      W(ブレ): {{ result.scores.v2_scores.item_scores.W|round(1) }},
+      A(左右差): {{ result.scores.v2_scores.item_scores.A|round(1) }},
+      V(速度proxy): {{ result.scores.v2_scores.item_scores.V|round(1) }}
+    </div>
+  {% else %}
+    <div class="small">v2スコアは未算出（動画品質/解析失敗の可能性）。</div>
+  {% endif %}
+</div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>血統AI（strict）</h3>
+      {% if result.scores.pedigree_ai %}
+        <div><b>ped_score</b>: {{ result.scores.pedigree_ai.ped_score|round(1) }}
+             <b>speed</b>: {{ result.scores.pedigree_ai.ped_speed|round(1) }}
+             <b>stamina</b>: {{ result.scores.pedigree_ai.ped_stamina|round(1) }}
+             <b>surfacefit</b>: {{ result.scores.pedigree_ai.ped_surfacefit|round(1) }}
+             <b>turfiness</b>: {{ (result.scores.pedigree_ai.ped_turfiness_0_1*100)|round(0) }}%</div>
+        <div class="small">{{ result.scores.pedigree_ai.notes }}</div>
+      {% endif %}
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>出走条件（URL解析 / 手入力）</h3>
+      {% if result.scores.race_parse and result.scores.race_parse.ok %}
+        <div class="small">source: {{ result.scores.race_parse.source }}</div>
+        <div><b>surface</b>: {{ result.scores.race_parse.surface }}
+             <b>distance</b>: {{ result.scores.race_parse.distance_m }}m
+             <b>turn</b>: {{ result.scores.race_parse.turn }}
+             <b>class</b>: {{ result.scores.race_parse.class }}</div>
+      {% else %}
+        <div class="small">URL解析に失敗（サイト側制限の可能性）。</div>
+      {% endif %}
+    </div>
+
+<div class="card" style="margin-top:16px;">
+  <h3>レース内確率（ミニーバローズ方式）</h3>
+  {% if result.scores.race_probs and result.scores.race_probs.ok %}
+    <div class="small">推定（Monte Carlo {{ result.scores.race_probs.n }}回 / 不確実性σ={{ result.scores.race_probs.sigma|round(1) }} / 目標μ={{ result.scores.race_probs.mu_target|round(1) }}, 画質Q={{ result.scores.race_probs.quality_q|round(0) }})</div>
+    {% if result.scores.race_probs.auto_entrants %}<div class="small">相手馬: URLから自動取得</div>{% endif %}
+        <div><b>勝ち負け</b>: {{ (result.scores.race_probs.win*100)|round(1) }}%　
+         <b>馬券内(Top3)</b>: {{ (result.scores.race_probs.top3*100)|round(1) }}%　
+         <b>Top5</b>: {{ (result.scores.race_probs.top5*100)|round(1) }}%　
+         <b>期待順位</b>: {{ result.scores.race_probs.expected_rank|round(2) }}</div>
+    <details style="margin-top:8px;">
+      <summary>相手馬（手入力）</summary>
+      <pre style="white-space:pre-wrap; font-size:12px; background:#f8f8f8; padding:10px; border-radius:8px;">{{ result.scores.race_probs.entrants | tojson(indent=2, ensure_ascii=False) }}</pre>
+    </details>
+  {% else %}
+    <div class="small">{{ (result.scores.race_probs.detail if result.scores.race_probs else "相手馬リストが無いため未算出") }}</div>
+  {% endif %}
+</div>
+
+{% endblock %}
+

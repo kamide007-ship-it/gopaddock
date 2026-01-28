@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card">
+  <h2>パドック歩様 解析</h2>
+  <p class="muted">スマホで撮影した歩様動画＋血統＋出走条件（URL/手入力）をハイブリッド評価します。</p>
+
+  <form method="post" enctype="multipart/form-data">
+    <div class="grid2">
+      <div>
+        <label>馬名</label>
+        <input name="horse_name" placeholder="例：ミニーバローズ" />
+      </div>
+      <div>
+        <label>出走表URL（任意）</label>
+        <input name="race_url" placeholder="https://..." />
+      </div>
+    </div>
+
+    <div class="grid3" style="margin-top:12px;">
+      <div>
+        <label>父（任意）</label>
+        <input name="sire" />
+      </div>
+      <div>
+        <label>母（任意）</label>
+        <input name="dam" />
+      </div>
+      <div>
+        <label>母父（任意）</label>
+        <input name="damsire" />
+      </div>
+    </div>
+
+    <label style="margin-top:12px;">歩様動画（任意）</label>
+    <input type="file" name="video" accept="video/*" />
+
+    <label style="margin-top:12px;">メモ（任意）</label>
+    <textarea name="notes" rows="3" placeholder="馬場・気配・周回方向など"></textarea>
+
+    <label style="margin-top:12px;">対戦馬（任意：手入力）</label>
+    <textarea name="opponents" rows="3" placeholder="例：タケノライコウ, ブリックスアンドモルタル ..."></textarea>
+
+    <div style="margin-top:12px;">
+      <button class="btn priority">解析する</button>
+      <a class="btn" href="{{ url_for('history') }}">履歴</a>
+    </div>
+  </form>
+</div>
+
+{% if result %}
+<div class="card">
+  <h2>結果</h2>
+  <p class="muted">総合評価（0–100）と、歩様/血統/条件適合の内訳です。</p>
+  <pre style="white-space:pre-wrap; font-size:12px; background:#f8f8f8; padding:12px; border-radius:10px;">{{ result | tojson(indent=2, ensure_ascii=False) }}</pre>
+  <p class="muted">※ AI環境変数が未設定の場合、AI要素は自動的にスキップします（アプリは落ちません）。</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card">
+  <h2>解析詳細</h2>
+  <p class="muted">
+    <b>{{ ev.horse_name }}</b>
+    {% if ev.created_at %} / {{ ev.created_at }}{% endif %}
+  </p>
+  {% if ev.race_url %}
+    <p><a href="{{ ev.race_url }}" target="_blank" rel="noopener">出走表URL</a></p>
+  {% endif %}
+  <h3>レポート(JSON)</h3>
+  <pre style="white-space:pre-wrap; font-size:12px; background:#f8f8f8; padding:12px; border-radius:10px;">{{ report | tojson(indent=2, ensure_ascii=False) }}</pre>
+  <div style="margin-top:12px;">
+    <a class="btn" href="{{ url_for('history') }}">履歴へ戻る</a>
+    <a class="btn" href="{{ url_for('app_page') }}">解析画面へ</a>
+  </div>
+</div>
+{% endblock %}

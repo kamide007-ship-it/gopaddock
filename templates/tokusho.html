@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>特定商取引法に基づく表記</h2>
+
+<div class="card">
+  <p><b>販売事業者名</b>：{{ tokusho.seller }}</p>
+  <p><b>運営統括責任者</b>：{{ tokusho.representative }}</p>
+  <p><b>お問い合わせ</b>：{{ tokusho.email }}</p>
+  <p><b>事業者サイト</b>：<a href="{{ tokusho.site }}" target="_blank" rel="noopener">{{ tokusho.site }}</a></p>
+  <hr>
+  <p><b>販売価格</b>：各プランページに表示（価格は税込／またはプランに表示）</p>
+  <p><b>商品代金以外の必要料金</b>：通信料等はお客様負担</p>
+  <p><b>お支払い方法</b>：銀行振込 / Stripe / PayPal（導入予定）</p>
+  <p><b>お支払い時期</b>：申込時（または請求書発行後、所定期限）</p>
+  <p><b>提供時期</b>：決済確認後、直ちに利用可能</p>
+  <p><b>返品・キャンセル</b>：デジタルサービスの性質上、提供開始後の返品は原則不可。返金規定は <a href="{{ url_for('legal_refund') }}">返金ポリシー</a> を参照。</p>
+</div>
+{% endblock %}
